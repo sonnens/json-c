@@ -494,7 +494,7 @@ int lh_char_equal(const void *k1, const void *k2)
 	return (strcmp((const char *)k1, (const char *)k2) == 0);
 }
 
-struct lh_table *lh_table_new(int size, lh_entry_free_fn *free_fn, lh_hash_fn *hash_fn,
+struct lh_table *lh_table_new(unsigned int size, lh_entry_free_fn *free_fn, lh_hash_fn *hash_fn,
                               lh_equal_fn *equal_fn)
 {
 	int i;
@@ -522,17 +522,17 @@ struct lh_table *lh_table_new(int size, lh_entry_free_fn *free_fn, lh_hash_fn *h
 	return t;
 }
 
-struct lh_table *lh_kchar_table_new(int size, lh_entry_free_fn *free_fn)
+struct lh_table *lh_kchar_table_new(unsigned int size, lh_entry_free_fn *free_fn)
 {
 	return lh_table_new(size, free_fn, char_hash_fn, lh_char_equal);
 }
 
-struct lh_table *lh_kptr_table_new(int size, lh_entry_free_fn *free_fn)
+struct lh_table *lh_kptr_table_new(unsigned int size, lh_entry_free_fn *free_fn)
 {
 	return lh_table_new(size, free_fn, lh_ptr_hash, lh_ptr_equal);
 }
 
-int lh_table_resize(struct lh_table *t, int new_size)
+int lh_table_resize(struct lh_table *t, unsigned int new_size)
 {
 	struct lh_table *new_t;
 	struct lh_entry *ent;
@@ -583,8 +583,8 @@ int lh_table_insert_w_hash(struct lh_table *t, const void *k, const void *v, con
 	if (t->count >= t->size * LH_LOAD_FACTOR)
 	{
 		/* Avoid signed integer overflow with large tables. */
-		int new_size = (t->size > INT_MAX / 2) ? INT_MAX : (t->size * 2);
-		if (t->size == INT_MAX || lh_table_resize(t, new_size) != 0)
+		unsigned int new_size = (t->size > UINT_MAX / 2) ? UINT_MAX : (t->size * 2);
+		if (t->size == UINT_MAX || lh_table_resize(t, new_size) != 0)
 			return -1;
 	}
 
@@ -594,7 +594,7 @@ int lh_table_insert_w_hash(struct lh_table *t, const void *k, const void *v, con
 	{
 		if (t->table[n].k == LH_EMPTY || t->table[n].k == LH_FREED)
 			break;
-		if ((int)++n == t->size)
+		if ((unsigned int)++n == t->size)
 			n = 0;
 	}
 
@@ -627,7 +627,7 @@ struct lh_entry *lh_table_lookup_entry_w_hash(struct lh_table *t, const void *k,
                                               const unsigned long h)
 {
 	unsigned long n = h % t->size;
-	int count = 0;
+	unsigned int count = 0;
 
 	while (count < t->size)
 	{
@@ -635,7 +635,7 @@ struct lh_entry *lh_table_lookup_entry_w_hash(struct lh_table *t, const void *k,
 			return NULL;
 		if (t->table[n].k != LH_FREED && t->equal_fn(t->table[n].k, k))
 			return &t->table[n];
-		if ((int)++n == t->size)
+		if ((unsigned int)++n == t->size)
 			n = 0;
 		count++;
 	}
